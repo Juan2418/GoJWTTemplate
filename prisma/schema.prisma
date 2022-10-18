@@ -1,0 +1,65 @@
+generator db {
+  provider = "go run github.com/prisma/prisma-client-go"
+}
+
+datasource db {
+  provider          = "mysql"
+  url               = env("DATABASE_URL")
+  shadowDatabaseUrl = env("SHADOW_DATABASE_URL")
+}
+
+model Family {
+  id         Int        @id @default(autoincrement())
+  name       String     @unique
+  createdAt  DateTime   @default(now())
+  updatedAt  DateTime   @updatedAt
+  apiKey     String     @unique @default(cuid())
+  members    User[]
+  categories Category[]
+}
+
+model User {
+  id        Int       @id @default(autoincrement())
+  name      String
+  password  String
+  email     String    @unique
+  role      Role      @default(user)
+  family    Family    @relation(fields: [familyId], references: [id])
+  familyId  Int
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  expenses  Expense[]
+}
+
+enum Role {
+  admin
+  user
+}
+
+model Category {
+  id                   Int       @id @default(autoincrement())
+  name                 String
+  description          String
+  image                String
+  monthlySpendingLimit Int       @default(0)
+  family               Family    @relation(fields: [familyId], references: [id])
+  familyId             Int
+  createdAt            DateTime  @default(now())
+  updatedAt            DateTime  @updatedAt
+  deleted              DateTime?
+  expenses             Expense[]
+}
+
+model Expense {
+  id          Int       @id @default(autoincrement())
+  amount      Decimal
+  description String
+  date        DateTime
+  category    Category  @relation(fields: [categoryId], references: [id])
+  categoryId  Int
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  deleted     DateTime?
+  user        User      @relation(fields: [userId], references: [id])
+  userId      Int
+}

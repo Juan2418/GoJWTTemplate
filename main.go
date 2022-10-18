@@ -1,6 +1,7 @@
 package main
 
 import (
+	"jwt-gin-example/db"
 	"jwt-gin-example/models"
 	"jwt-gin-example/services"
 
@@ -10,13 +11,9 @@ import (
 )
 
 type user = models.User
-var JWTService = services.JwtService{}
 
-var users []user = []user{
-	{ID: 1, Name: "user1"},
-	{ID: 2, Name: "user2"},
-	{ID: 3, Name: "user3"},
-}
+var JWTService = services.JwtService{}
+var usersRepository = daccess.NewUserRepository()
 
 func GetVerifiedToken(c *gin.Context) {
 	tokenString := GetToken(c.Request.Header)
@@ -36,30 +33,19 @@ func GetToken(Header http.Header) string {
 	return tokenString
 }
 
-func GetUser(c *gin.Context) {
-	id := c.Param("id")
-	name := c.Param("name")
-	c.JSON(http.StatusOK, gin.H{"id": id, "name": name})
-}
-
-type LoginRequest struct {
-	Id int `json:"id"`
-}
-
 func Login(c *gin.Context) {
-	var requestBody LoginRequest
+	var requestBody models.LoginRequest
 
 	if err := c.BindJSON(&requestBody); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
 
-	if requestBody.Id >= len(users) || requestBody.Id < 0 {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid user id", "id": requestBody.Id})
+	user, err := usersRepository.FindUserById(requestBody.Id)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
-
-	user := users[requestBody.Id]
 
 	token, err := JWTService.GenerateJWT(user)
 	if err != nil {
@@ -71,13 +57,8 @@ func Login(c *gin.Context) {
 }
 
 func main() {
-	u := user{ID: 1, Name: "John"}
-
 	r := gin.Default()
-	r.GET("/user/:id/:name", GetUser)
 	r.POST("/login", Login)
 	r.GET("/verify", GetVerifiedToken)
 	r.Run(":8080")
-
-	println(u.Name)
 }
