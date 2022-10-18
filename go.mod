@@ -3,6 +3,7 @@ module jwt-gin-example
 go 1.19
 
 replace jwt-gin-example/models/ => ./models/models.go
+replace jwt-gin-example/services/ => ./services/services.go
 
 require (
 	github.com/gin-gonic/gin v1.8.1

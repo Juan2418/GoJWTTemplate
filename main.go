@@ -2,16 +2,15 @@ package main
 
 import (
 	"jwt-gin-example/models"
+	"jwt-gin-example/services"
 
-	"fmt"
 	"net/http"
-	"time"
 
 	"github.com/gin-gonic/gin"
-	"github.com/golang-jwt/jwt"
 )
 
 type user = models.User
+var JWTService = services.JwtService{}
 
 var users []user = []user{
 	{ID: 1, Name: "user1"},
@@ -19,20 +18,9 @@ var users []user = []user{
 	{ID: 3, Name: "user3"},
 }
 
-var secret = []byte("secret")
-
-func GenerateJWT(User user) (string, error) {
-	token := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
-		"user": User,
-		"exp":  time.Now().Add(time.Minute * 5).Unix(),
-	})
-
-	return token.SignedString(secret)
-}
-
 func GetVerifiedToken(c *gin.Context) {
 	tokenString := GetToken(c.Request.Header)
-	response, err := VerifyToken(tokenString)
+	response, err := JWTService.VerifyToken(tokenString)
 
 	if err != nil {
 		c.JSON(http.StatusUnauthorized, gin.H{"error": err.Error()})
@@ -40,36 +28,6 @@ func GetVerifiedToken(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, gin.H{"user": response.User})
-}
-
-type VerifyResponse struct {
-	User user `json:"user"`
-}
-
-func VerifyToken(tokenString string) (VerifyResponse, error) {
-
-	println(tokenString)
-
-	token, err := jwt.Parse(tokenString, func(token *jwt.Token) (interface{}, error) {
-		_, ok := token.Method.(*jwt.SigningMethodHMAC)
-		if !ok {
-			return nil, fmt.Errorf("invalid token")
-		}
-		return secret, nil
-	})
-
-	if err != nil {
-		return VerifyResponse{}, err
-	}
-
-	if claims, ok := token.Claims.(jwt.MapClaims); ok && token.Valid {
-		userClaim := claims["user"].(map[string]interface{})
-		id := int(userClaim["id"].(float64))
-		name := userClaim["name"].(string)
-		return VerifyResponse{User: user{ID: id, Name: name}}, nil
-	} else {
-		return VerifyResponse{}, fmt.Errorf("invalid token")
-	}
 }
 
 func GetToken(Header http.Header) string {
@@ -103,7 +61,7 @@ func Login(c *gin.Context) {
 
 	user := users[requestBody.Id]
 
-	token, err := GenerateJWT(user)
+	token, err := JWTService.GenerateJWT(user)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
