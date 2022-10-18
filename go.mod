@@ -1,6 +1,8 @@
 module jwt-gin-example
 
-go 1.18
+go 1.19
+
+replace jwt-gin-example/models/ => ./models/models.go
 
 require (
 	github.com/gin-gonic/gin v1.8.1

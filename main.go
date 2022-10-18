@@ -1,6 +1,8 @@
 package main
 
 import (
+	"jwt-gin-example/models"
+
 	"fmt"
 	"net/http"
 	"time"
@@ -9,10 +11,7 @@ import (
 	"github.com/golang-jwt/jwt"
 )
 
-type user struct {
-	ID   int    `json:"id"`
-	Name string `json:"name"`
-}
+type user = models.User
 
 var users []user = []user{
 	{ID: 1, Name: "user1"},
@@ -20,13 +19,9 @@ var users []user = []user{
 	{ID: 3, Name: "user3"},
 }
 
-func (usr user) toString() string {
-	return `{"id":` + string(rune(usr.ID)) + `,"name":"` + usr.Name + `"}`
-}
-
 var secret = []byte("secret")
 
-func generateJWT(User user) (string, error) {
+func GenerateJWT(User user) (string, error) {
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
 		"user": User,
 		"exp":  time.Now().Add(time.Minute * 5).Unix(),
@@ -35,9 +30,9 @@ func generateJWT(User user) (string, error) {
 	return token.SignedString(secret)
 }
 
-func getVerifiedToken(c *gin.Context) {
-	tokenString := getToken(c.Request.Header)
-	response, err := verifyToken(tokenString)
+func GetVerifiedToken(c *gin.Context) {
+	tokenString := GetToken(c.Request.Header)
+	response, err := VerifyToken(tokenString)
 
 	if err != nil {
 		c.JSON(http.StatusUnauthorized, gin.H{"error": err.Error()})
@@ -51,7 +46,7 @@ type VerifyResponse struct {
 	User user `json:"user"`
 }
 
-func verifyToken(tokenString string) (VerifyResponse, error) {
+func VerifyToken(tokenString string) (VerifyResponse, error) {
 
 	println(tokenString)
 
@@ -77,13 +72,13 @@ func verifyToken(tokenString string) (VerifyResponse, error) {
 	}
 }
 
-func getToken(Header http.Header) string {
+func GetToken(Header http.Header) string {
 	tokenString := Header.Get("Authorization")
 	tokenString = tokenString[7:]
 	return tokenString
 }
 
-func getUser(c *gin.Context) {
+func GetUser(c *gin.Context) {
 	id := c.Param("id")
 	name := c.Param("name")
 	c.JSON(http.StatusOK, gin.H{"id": id, "name": name})
@@ -93,7 +88,7 @@ type LoginRequest struct {
 	Id int `json:"id"`
 }
 
-func login(c *gin.Context) {
+func Login(c *gin.Context) {
 	var requestBody LoginRequest
 
 	if err := c.BindJSON(&requestBody); err != nil {
@@ -108,7 +103,7 @@ func login(c *gin.Context) {
 
 	user := users[requestBody.Id]
 
-	token, err := generateJWT(user)
+	token, err := GenerateJWT(user)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
@@ -121,9 +116,9 @@ func main() {
 	u := user{ID: 1, Name: "John"}
 
 	r := gin.Default()
-	r.GET("/user/:id/:name", getUser)
-	r.POST("/login", login)
-	r.GET("/verify", getVerifiedToken)
+	r.GET("/user/:id/:name", GetUser)
+	r.POST("/login", Login)
+	r.GET("/verify", GetVerifiedToken)
 	r.Run(":8080")
 
 	println(u.Name)
