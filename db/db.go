@@ -1,18 +1,24 @@
 package daccess
 
-import "jwt-gin-example/models"
+import (
+	"gorm.io/driver/mysql"
+	"gorm.io/gorm"
+)
 
-type UserRepository interface {
-	FindUserById(id int) (models.User, error)
-}
+var dsn = "user:password@tcp(127.0.0.1:3306)/db?charset=utf8mb4&parseTime=True&loc=Local"
+var Client, err = gorm.Open(mysql.Open(dsn), &gorm.Config{})
 
-type userRepository struct {
-}
+// type UserRepository interface {
+// 	FindUserById(id int) (*db.UserModel, error)
+// }
 
-func NewUserRepository() UserRepository {
-	return &userRepository{}
-}
+// type userRepository struct {
+// }
 
-func (r *userRepository) FindUserById(id int) (models.User, error) {
-	return models.User{ID: id, Name: "user" + string(id)}, nil
-}
+// func NewUserRepository() UserRepository {
+// 	return &userRepository{}
+// }
+
+// func (r *userRepository) FindUserById(id int) (*db.UserModel, error) {
+// 	return Client.User.FindUnique(db.User.ID.Equals(id)).Exec(context.Background())
+// }

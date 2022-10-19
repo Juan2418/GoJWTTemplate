@@ -2,6 +2,7 @@ package services
 
 import (
 	"jwt-gin-example/models"
+	"jwt-gin-example/prisma/db"
 
 	"fmt"
 	"time"
@@ -16,7 +17,7 @@ var secret = []byte("secret")
 type JwtService struct {
 }
 
-func (s *JwtService) GenerateJWT(User user) (string, error) {
+func (s *JwtService) GenerateJWT(User *db.UserModel) (string, error) {
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
 		"user": User,
 		"exp":  time.Now().Add(time.Minute * 5).Unix(),
@@ -47,7 +48,7 @@ func (s *JwtService) VerifyToken(tokenString string) (VerifyResponse, error) {
 
 	if claims, ok := token.Claims.(jwt.MapClaims); ok && token.Valid {
 		userClaim := claims["user"].(map[string]interface{})
-		id := int(userClaim["id"].(float64))
+		id := int64(userClaim["id"].(float64))
 		name := userClaim["name"].(string)
 		return VerifyResponse{User: user{ID: id, Name: name}}, nil
 	} else {
