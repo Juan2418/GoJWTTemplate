@@ -15,6 +15,7 @@ type user = models.User
 var JWTService = services.JwtService{}
 
 var usersRepository = daccess.NewUserRepository()
+var usersService = services.UsersService{}
 
 func GetVerifiedToken(c *gin.Context) {
 	tokenString := GetToken(c.Request.Header)
@@ -68,10 +69,28 @@ func PingDB(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"user": user})
 }
 
+func Register(c *gin.Context) {
+	var requestBody models.RegisterRequest
+
+	if err := c.BindJSON(&requestBody); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	response, err := usersService.CreateUser(requestBody)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	c.JSON(http.StatusOK, response)
+}
+
 func main() {
 	r := gin.Default()
 	r.POST("/login", Login)
 	r.GET("/verify", GetVerifiedToken)
+	r.POST("/users", Register)
 	r.GET("/ping", PingDB)
 	r.Run(":8080")
 }
