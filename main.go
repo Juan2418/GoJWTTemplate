@@ -14,7 +14,7 @@ type user = models.User
 
 var JWTService = services.JwtService{}
 
-// var usersRepository = daccess.NewUserRepository()
+var usersRepository = daccess.NewUserRepository()
 
 func GetVerifiedToken(c *gin.Context) {
 	tokenString := GetToken(c.Request.Header)
@@ -35,26 +35,31 @@ func GetToken(Header http.Header) string {
 }
 
 func Login(c *gin.Context) {
-	// var requestBody models.LoginRequest
+	var requestBody models.LoginRequest
 
-	// if err := c.BindJSON(&requestBody); err != nil {
-	// 	c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
-	// 	return
-	// }
+	if err := c.BindJSON(&requestBody); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
 
-	// user, err := usersRepository.FindUserById(requestBody.Id)
-	// if err != nil {
-	// 	c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
-	// 	return
-	// }
+	user, err := usersRepository.FindUserById(requestBody.Id)
+	if err != nil {
+		if err.Error() == "record not found" {
+			c.JSON(http.StatusNotFound, gin.H{"error": "user not found"})
+			return
+		}
 
-	// token, err := JWTService.GenerateJWT(user)
-	// if err != nil {
-	// 	c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
-	// 	return
-	// }
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
 
-	// c.JSON(http.StatusOK, gin.H{"token": token, "requestedId": requestBody.Id, "user": user})
+	token, err := JWTService.GenerateJWT(user)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"token": token, "requestedId": requestBody.Id, "user": user})
 }
 
 func PingDB(c *gin.Context) {

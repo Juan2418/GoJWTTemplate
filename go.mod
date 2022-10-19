@@ -13,13 +13,13 @@ require (
 	github.com/golang-jwt/jwt v3.2.2+incompatible
 	github.com/iancoleman/strcase v0.0.0-20190422225806-e506e3ef7365
 	github.com/joho/godotenv v1.4.0
-	github.com/prisma/prisma-client-go v0.16.2
 	github.com/shopspring/decimal v1.3.1
 	github.com/takuoki/gocase v1.0.0
+	gorm.io/driver/mysql v1.4.3
+	gorm.io/gorm v1.24.0
 )
 
 require (
-	github.com/766b/go-outliner v0.0.0-20180511142203-fc6edecdadd7 // indirect
 	github.com/gin-contrib/sse v0.1.0 // indirect
 	github.com/go-playground/locales v0.14.0 // indirect
 	github.com/go-playground/universal-translator v0.18.0 // indirect
@@ -41,6 +41,4 @@ require (
 	golang.org/x/text v0.3.6 // indirect
 	google.golang.org/protobuf v1.28.0 // indirect
 	gopkg.in/yaml.v2 v2.4.0 // indirect
-	gorm.io/driver/mysql v1.4.3 // indirect
-	gorm.io/gorm v1.24.0 // indirect
 )
